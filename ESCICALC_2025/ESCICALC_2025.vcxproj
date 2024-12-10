@@ -127,7 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Analyse.cpp" />
     <ClCompile Include="ESCICALC_2025.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Analyse.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
