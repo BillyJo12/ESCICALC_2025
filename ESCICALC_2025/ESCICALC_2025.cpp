@@ -7,7 +7,7 @@
 // Fonction pour convertir une chaîne en base 26 (ex. "AB") vers un entier (base 10)
 int base26_to_base10(const char* num) {
     int result = 0;
-    int is_negative = 0; vvv
+    int is_negative = 0;
 
     // Vérifie si le nombre est négatif
     if (num[0] == '-') {
