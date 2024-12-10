@@ -1,3 +1,4 @@
+
 #include "Analyse.h"
 Console.Writeline("ESCICalc 2025");
 Console.Writeline("Copyright (c) 2024 Promotion BFSDA 2027");
