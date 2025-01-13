@@ -2,169 +2,145 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <math.h>
-
-// Fonction pour convertir une chaîne en base 26 (ex. "AB") vers un entier (base 10)
-int base26_to_base10(const char* num) {
-    int result = 0;
-    int is_negative = 0;
-
-    // Vérifie si le nombre est négatif
-    if (num[0] == '-') {
-        is_negative = 1;
-        num++;
-    }
-
-    for (int i = 0; num[i] != '\0'; i++) {
-        if (!isalpha(num[i])) {
-            printf("Erreur : caractère invalide détecté (%c).\n", num[i]);
-            exit(1);
-        }
-        result = result * 26 + (toupper(num[i]) - 'A');
-    }
-
-    return is_negative ? -result : result;
+// Fonction pour vérifier si un caractère est un opérateur
+int isOperator(char c) {
+    return c == '+' || c == '-' || c == '*' || c == '/';
 }
 
-// Fonction pour convertir un entier (base 10) en base 26 (chaîne)
-void base10_to_base26(int num, char* result) {
-    int is_negative = 0;
+// Fonction pour donner la priorité aux opérateurs
+int precedence(char op) {
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return 0;
+}
+
+// Fonction pour effectuer une opération
+int applyOp(int a, int b, char op) {
+    switch (op) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': return a / b;
+    }
+    return 0;
+}
+
+// Fonction pour convertir un caractère de base 26 en entier de base 10
+int charToBase26(char c) {
+    if (isdigit(c)) return c - '0';
+    if (isalpha(c)) return toupper(c) - 'A' + 10;
+    return 0;
+}
+
+// Fonction pour convertir une chaîne en entier de base 10
+int stringToBase10(const char* str) {
+    int num = 0;
+    while (*str) {
+        num = num * 26 + charToBase26(*str);
+        str++;
+    }
+    return num;
+}
+
+// Fonction pour convertir un nombre de base 10 en base 26
+char* toBase26(int num) {
+    static char result[100];
+    char chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     int index = 0;
 
-    if (num < 0) {
-        is_negative = 1;
-        num = -num;
-    }
-
     do {
-        result[index++] = 'A' + (num % 26);
+        result[index++] = chars[num % 26];
         num /= 26;
-    } while (num > 0);
-
-    if (is_negative) {
-        result[index++] = '-';
-    }
-
+       } 
+    while (num > 0);
     result[index] = '\0';
 
-    // Inverse la chaîne pour un affichage correct
+    // Inverser la chaîne de caractères
     for (int i = 0; i < index / 2; i++) {
         char temp = result[i];
         result[i] = result[index - 1 - i];
         result[index - 1 - i] = temp;
     }
-}
-
-// Fonction pour appliquer une opération mathématique
-int apply_operation(int num1, int num2, char op) {
-    switch (op) {
-    case '+': return num1 + num2;
-    case '-': return num1 - num2;
-    case '*': return num1 * num2;
-    case '/':
-        if (num2 == 0) {
-            printf("Erreur : division par zéro.\n");
-            exit(1);
-        }
-        return num1 / num2;
-    case '%':
-        if (num2 == 0) {
-            printf("Erreur : division par zéro.\n");
-            exit(1);
-        }
-        return num1 % num2;
-    case '^': return pow(num1, num2);
-    default:
-        printf("Erreur : opération non supportée (%c).\n", op);
-        exit(1);
-    }
-}
-
-// Analyseur d'expressions : gestion des priorités et des parenthèses
-int evaluate_expression(char** expr);
-
-// Fonction pour analyser un facteur (un nombre ou une sous-expression entre parenthèses)
-int parse_factor(char** expr) {
-    char buffer[100];
-    int index = 0;
-
-    // Ignorer les espaces
-    while (**expr == ' ') (*expr)++;
-
-    if (**expr == '(') {
-        (*expr)++; // Ouvre la parenthèse
-        int result = evaluate_expression(expr);
-        if (**expr == ')') {
-            (*expr)++; // Ferme la parenthèse
-        }
-        else {
-            printf("Erreur : parenthèse fermante manquante.\n");
-            exit(1);
-        }
-        return result;
-    }
-
-    // Lire un nombre ou une variable
-    while (isalpha(**expr) || **expr == '-') {
-        buffer[index++] = **expr;
-        (*expr)++;
-    }
-    buffer[index] = '\0';
-
-    // Convertir en base 10
-    return base26_to_base10(buffer);
-}
-
-// Fonction pour analyser un terme (gère *, /, %)
-int parse_term(char** expr) {
-    int result = parse_factor(expr);
-
-    while (**expr == '*' || **expr == '/' || **expr == '%') {
-        char op = **expr;
-        (*expr)++; // Passe à l'opérateur suivant
-        int next = parse_factor(expr);
-        result = apply_operation(result, next, op);
-    }
-
     return result;
 }
+// Fonction pour évaluer une expression en base 26
+int evaluateBase26(const char* tokens) {
+    int i;
+    int values[100];
+    char ops[100];
+    int valIndex = -1;
+    int opIndex = -1;
 
-// Fonction principale pour analyser une expression complète (gère +, -)
-int evaluate_expression(char** expr) {
-    int result = parse_term(expr);
+    for (i = 0; i < strlen(tokens); i++) {
+        if (tokens[i] == ' ') continue;
+        if (isalnum(tokens[i])) {
+            char temp[100];
+            int j = 0;
+            while (i < strlen(tokens) && isalnum(tokens[i])) {
+                temp[j++] = tokens[i++];
+            }
+            temp[j] = '\0';
+            values[++valIndex] = stringToBase10(temp);
+            i--;
+        }
+        else if (tokens[i] == '(') {
+            ops[++opIndex] = tokens[i];
+        }
+        else if (tokens[i] == ')') {
+            while (opIndex != -1 && ops[opIndex] != '(') {
+                int val2 = values[valIndex--];
+                int val1 = values[valIndex--];
+                char op = ops[opIndex--];
+                values[++valIndex] = applyOp(val1, val2, op);
+            }
+            opIndex--;  // remove '('
+        }
+        else if (isOperator(tokens[i])) {
+            while (opIndex != -1 && precedence(ops[opIndex]) >= precedence(tokens[i])) {
+                int val2 = values[valIndex--];
+                int val1 = values[valIndex--];
+                char op = ops[opIndex--];
+                values[++valIndex] = applyOp(val1, val2, op);
+            }
+            ops[++opIndex] = tokens[i];
+        }
 
-    while (**expr == '+' || **expr == '-') {
-        char op = **expr;
-        (*expr)++; // Passe à l'opérateur suivant
-        int next = parse_term(expr);
-        result = apply_operation(result, next, op);
+    while (opIndex != -1) {
+        int val2 = values[valIndex--];
+        int val1 = values[valIndex--];
+        char op = ops[opIndex--];
+        values[++valIndex] = applyOp(val1, val2, op);
     }
 
-    return result;
+    return values[valIndex];
 }
 
 // Fonction principale
 int main() {
-    char expression[256];
-    char result_base26[100];
+    char expression[100];
+    while (1) {
+        printf("Entrez l'expression en base 26 (ou 'exit' pour quitter): ");
+        fgets(expression, 100, stdin);
 
-    printf("=== Calculatrice Universelle en Base 26 ===\n");
-    printf("Entrez une expression (ex : AB + C * (D - E)) : ");
-    fgets(expression, sizeof(expression), stdin);
+        // Supprimer le '\n' à la fin de l'entrée
+        expression[strcspn(expression, "\n")] = '\0';
 
-    // Supprimer le saut de ligne final
-    expression[strcspn(expression, "\n")] = '\0';
+        if (strcmp(expression, "exit") == 0) break;
 
-    char* expr_ptr = expression;
-
-    // Évaluer l'expression
-    int result_base10 = evaluate_expression(&expr_ptr);
-
-    // Convertir le résultat en base 26
-    base10_to_base26(result_base10, result_base26);
-
-    // Afficher le résultat
-    printf("Résultat : %s (en base 26)\n", result_base26);
-
+        int resultBase10 = evaluateBase26(expression);
+        printf("Résultat en base 10: %d\n", resultBase10);
+        printf("Résultat en base 26: %s\n", toBase26(resultBase10));
+    }
     return 0;
 }
+
+// Exécuter le programme : Ctrl+F5 ou menu Déboguer > Exécuter sans débogage
+// Déboguer le programme : F5 ou menu Déboguer > Démarrer le débogage
+
+// Astuces pour bien démarrer : 
+//   1. Utilisez la fenêtre Explorateur de solutions pour ajouter des fichiers et les gérer.
+//   2. Utilisez la fenêtre Team Explorer pour vous connecter au contrôle de code source.
+//   3. Utilisez la fenêtre Sortie pour voir la sortie de la génération et d'autres messages.
+//   4. Utilisez la fenêtre Liste d'erreurs pour voir les erreurs.
+//   5. Accédez à Projet > Ajouter un nouvel élément pour créer des fichiers de code, ou à Projet > Ajouter un élément existant pour ajouter des fichiers de code existants au projet.
+//   6. Pour rouvrir ce projet plus tard, accédez à Fichier > Ouvrir > Projet et sélectionnez le fichier .sln.
