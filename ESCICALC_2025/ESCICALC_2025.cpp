@@ -36,7 +36,7 @@ int charToBase26(char c) {
 int stringToBase10(const char* str) {
     int num = 0;
     while (*str) {
-        num = num * 26 + charToBase26(*str);
+        num = num * 10 + charToBase26(*str);
         str++;
     }
     return num;
@@ -45,7 +45,7 @@ int stringToBase10(const char* str) {
 // Fonction pour convertir un nombre de base 10 en base 26
 char* toBase26(int num) {
     static char result[100];
-    char chars[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    char chars[] = "0123456789ABCDEFGHIJKLMNOP";
     int index = 0;
 
     do {
